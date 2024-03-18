@@ -1,0 +1,2 @@
+0 Reversals
+1 Normal

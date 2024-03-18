@@ -1,0 +1,30 @@
+{
+  "project_info": {
+    "project_number": "32860798291",
+    "firebase_url": "https://divyanga-default-rtdb.firebaseio.com",
+    "project_id": "divyanga",
+    "storage_bucket": "divyanga.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:32860798291:android:f84695153aa326b0f035a6",
+        "android_client_info": {
+          "package_name": "com.example.divyanga"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBN-MBbtZQZboew-xiWjV64ez2sIQY_sy8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
