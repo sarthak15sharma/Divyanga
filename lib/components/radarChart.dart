@@ -31,9 +31,9 @@ class RadarChartGraph extends StatelessWidget {
               case 1:
                 return RadarChartTitle(text: 'Spelling', angle: 0);
               case 2:
-                return RadarChartTitle(text: 'Reading Comprehension', angle: 0,);
+                return RadarChartTitle(text: 'Reading\n Comprehension', angle: 0,);
               case 3:
-                return RadarChartTitle(text: 'Word Decoding', angle: 0);
+                return RadarChartTitle(text: 'Word\n Decoding', angle: 0);
               case 4:
                 return RadarChartTitle(text: 'Letter Sound\nKnowledge', angle: 0);
               default:

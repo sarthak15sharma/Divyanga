@@ -1,5 +1,6 @@
 import 'package:divyanga/screens/home_screen.dart';
 import 'package:divyanga/screens/paint_screen.dart';
+import 'package:divyanga/screens/photoUpload_screen.dart';
 import 'package:divyanga/screens/report_screen.dart';
 import 'package:divyanga/screens/speechText_screen.dart';
 import 'package:divyanga/screens/traceLetter_screen.dart';
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: Paint_Screen(),
+      home: HomeScreen(),
     );
   }
 }

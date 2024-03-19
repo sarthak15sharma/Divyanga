@@ -44,6 +44,7 @@ dependencies:
   fl_chart: ^0.66.2
   circle_list: ^1.0.5
   speech_to_text: ^6.6.0
+  image_picker: ^1.0.7
 
 dev_dependencies:
   flutter_test:

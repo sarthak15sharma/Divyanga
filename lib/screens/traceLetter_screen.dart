@@ -1,8 +1,11 @@
 import 'package:divyanga/components/blank_pixel.dart';
+import 'package:divyanga/constants/colors.dart';
 import 'package:divyanga/constants/styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_state_notifier/flutter_state_notifier.dart';
 import 'package:scribble/scribble.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class TraceLetterScreen extends StatefulWidget {
   const TraceLetterScreen({super.key});
@@ -13,6 +16,10 @@ class TraceLetterScreen extends StatefulWidget {
 
 class _TraceLetterScreenState extends State<TraceLetterScreen> {
   late ScribbleNotifier notifier;
+
+  List<String> letters = ['D','b','e','p','q','N'];
+  int count = 0;
+  bool correct = true;
 
   @override
   void initState() {
@@ -44,7 +51,7 @@ class _TraceLetterScreenState extends State<TraceLetterScreen> {
       //     onPressed: () => _saveImage(context),
       //   ),
       // ),
-      backgroundColor: Colors.blueAccent,
+      backgroundColor: secondaryColor,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -53,7 +60,7 @@ class _TraceLetterScreenState extends State<TraceLetterScreen> {
             child: Expanded(
                 child: Container(
                     decoration: curvedEdges,
-                    child: Center(child: Text("e",style: letterTracingTextStyle))
+                    child: Center(child: Text(letters[count],style: letterTracingTextStyle))
                 )
             ),
           ),
@@ -67,9 +74,9 @@ class _TraceLetterScreenState extends State<TraceLetterScreen> {
 
                     Positioned(
                       left: 75,
-                      top: -200,
+                      top: -100,
                       child: Container(
-                          child: Text("p",style: letterTraceTextStyle)
+                          child: Text(letters[count],style: letterTraceTextStyle)
                       ),
                     ),
 
@@ -107,20 +114,56 @@ class _TraceLetterScreenState extends State<TraceLetterScreen> {
   Future<void> _saveImage(BuildContext context) async {
     final image = await notifier.renderImage();
 
+    processImage();
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Your Image"),
-        content: Image.memory(image.buffer.asUint8List()),
+        title: correct? Text("Congratulations"):Text("Try again "),
+        content: Column(
+          children: [
+            Image.memory(image.buffer.asUint8List()),
+            TextButton(
+                onPressed: (){
+                  setState(() {
+                    if(correct)count++;
+                    Navigator.pop(context);
+                    notifier.clear();
+                    correct = false;
+                  });
+                },
+                child:correct? Text("Next"):Text("Next")
+            )
+          ],
+        ),
       ),
     );
 
   }
-
   void processImage()async{
     final image = await notifier.renderImage();
-    // var recognitions = await Tflite.runModelOnFrame(bytesList: image.buffer.asUint8List(0));
-    // Tflite.runModelOnImage(path: Image.memory(image.buffer.asUint8List()));
+
+    print(image.buffer.lengthInBytes);
+    print(image.buffer.asByteData().toString());
+    String img = base64.encode(image.buffer.asUint8List());
+    print(img);
+    var response = await http.post(
+      Uri.parse('http://192.168.182.59:8000/reversal'),
+      headers: <String, String>{
+        'Content-Type': 'application/json; charset=UTF-8',
+      },
+      body: jsonEncode(<String, String>{
+        'image': img
+      }),
+    );
+    print((response.body));
+
+    print((response.statusCode));
+    setState(() {
+      if(response.statusCode == 200){
+        correct = true;
+      }
+    });
+
   }
 
   Widget _buildStrokeToolbar(BuildContext context) {

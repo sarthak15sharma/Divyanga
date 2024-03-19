@@ -12,7 +12,7 @@ final TextStyle letterTracingTextStyle = GoogleFonts.comicNeue(
 
 final TextStyle letterTraceTextStyle = GoogleFonts.comicNeue(
     textStyle: const TextStyle(
-        fontSize: 500,
+        fontSize: 400,
         fontWeight: FontWeight.w800,
         color: Colors.grey
     )

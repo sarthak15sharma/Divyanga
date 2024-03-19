@@ -13,7 +13,8 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   final stt.SpeechToText _speech =stt.SpeechToText();
   bool _isListening = false;
   String _text = '';
-  String word = "HUNTS";
+  List<String> words = ["HAM","KIND","BALL","BAKE","DAD"];
+  int count = 0;
   int letter_index = -1;
 
   @override
@@ -46,7 +47,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                     width: double.infinity,
                     child: ListView.builder(
                       scrollDirection: Axis.horizontal,
-                      itemCount: word.length,
+                      itemCount: words[count].length,
                       itemBuilder: (context, index) {
                         return Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -57,7 +58,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                             ),
                             child: Padding(
                               padding: const EdgeInsets.all(8.0),
-                              child: Text(word[index],style: GoogleFonts.comicNeue(
+                              child: Text(words[count][index],style: GoogleFonts.comicNeue(
                                   textStyle:  TextStyle(
                                       fontSize: 48,
                                       fontWeight: FontWeight.w600,
@@ -87,12 +88,12 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   void startListening() {
     _speech.listen(
       onResult: (result) {
-        if(result.recognizedWords.toUpperCase().contains(word[letter_index+1])){
+        if(result.recognizedWords.toUpperCase().contains(words[count][letter_index+1])){
           setState(() {
             letter_index++;
             print(letter_index);
           });
-          if(letter_index == word.length-1){
+          if(letter_index == words[count].length-1){
             showDialog(
               context: context,
               builder: (context) => AlertDialog(
@@ -100,7 +101,10 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
                 content: ElevatedButton(
                   onPressed: (){
                     setState(() {
-                      word = "HANK";
+                      count++;
+                      letter_index=-1;
+                      _text = "";
+                      stopListening();
                     });
                     Navigator.pop(context);
                   },
@@ -123,6 +127,7 @@ class _SpeechToTextScreenState extends State<SpeechToTextScreen> {
   void stopListening() {
     _speech.stop();
     setState(() {
+      _text = "";
       _isListening = false;
     });
   }

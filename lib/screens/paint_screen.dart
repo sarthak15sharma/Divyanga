@@ -98,12 +98,14 @@ class _Paint_ScreenState extends State<Paint_Screen> {
     final image = await notifier.renderImage();
 
     processImage();
+    String img = base64.encode(image.buffer.asUint8List());
+    print(img);
 
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text("Your Image"),
-        content: Image.memory(image.buffer.asUint8List()),
+        content: Image.memory(base64Decode(img)),
       ),
     );
 
@@ -116,19 +118,20 @@ class _Paint_ScreenState extends State<Paint_Screen> {
     // var recognitions = await Tflite.runModelOnFrame(bytesList: image.buffer.asUint8List(0));
     // Tflite.runModelOnImage(path: Image.memory(image.buffer.asUint8List()));
 
-    print(image.buffer.asUint8List().toString());
+    print(image.buffer.lengthInBytes);
     print(image.buffer.asByteData().toString());
+    String img = base64.encode(image.buffer.asUint8List());
+    print(img);
     var response = await http.post(
-      Uri.parse('http://192.168.182.162:8000/print'),
+      Uri.parse('http://192.168.182.162:8000/upload_image'),
       headers: <String, String>{
         'Content-Type': 'application/json; charset=UTF-8',
       },
-      body: jsonEncode(<String, dynamic>{
-        'image': image.buffer.asByteData()
+      body: jsonEncode(<String, String>{
+        'image': img
       }),
     );
     print(response.statusCode);
-
 
   }
 
