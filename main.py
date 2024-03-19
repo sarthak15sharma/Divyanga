@@ -1,5 +1,6 @@
 # from typing import Union
-from fastapi import FastAPI, Request, Depends
+import shutil
+from fastapi import FastAPI, Request, Depends, UploadFile, File
 import io
 import base64
 from PIL import Image
@@ -37,6 +38,9 @@ async def parse_body(request : Request):
 class Item(BaseModel):
     image: str
 
+class Strinput(BaseModel):
+    inputs: str
+
 
 @app.post("/getImgLabel")
 async def get_imglabel():
@@ -46,20 +50,24 @@ async def get_imglabel():
     }
 
 
-@app.post("/reversal")
-async def get_img_reversal_label(imgpath : str):
-    res = predict_reversal(imgpath)
+@app.post('/upload')
+def upload_file(uploaded_file: UploadFile = File(...)):
+    path = f"files/{uploaded_file.filename}"
+    output_dir = "files/output/"
+    with open(path, 'w+b') as file:
+        shutil.copyfileobj(uploaded_file.file, file)
+
+    convert_pdf_to_text(pdf_path=path, ocr_folder=output_dir)
     return {
-        'result' : res
+        'file': uploaded_file.filename,
+        'content': uploaded_file.content_type,
+        'path': path,
     }
 
-@app.post("/upload-pdf")
-async def pdf_totext(path, folder):
-    convert_pdf_to_text(pdf_path=path, ocr_folder=folder)
 
 @app.post("/spellcheck")
-async def get_features(s1 : str):
-    res = spell_check(s1)
+async def get_features(s1 : Strinput):
+    res = spell_check(s1.inputs)
     return {
         'result' : res
     }
@@ -128,7 +136,7 @@ async def parse_input(data : bytes = Depends(parse_body)):
 #     except Exception as e:
 #         return e
     
-@app.post("/upload_image")
+@app.post("/reversal")
 async def upload_image(item: Item):
     # Read the JSON body of the request
     # data = await request.json()
@@ -146,5 +154,7 @@ async def upload_image(item: Item):
     # Save the image as JPEG
     img_path = "uploaded_image.jpg"
     rgb_image.save(img_path, format='JPEG')
-    
-    return {"message": "Image uploaded and saved successfully", "image_path":img_path}
+    res = predict_reversal(image_path=img_path)
+    return {
+        'result' : res
+    }
