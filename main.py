@@ -1,116 +1,150 @@
 # from typing import Union
-from fastapi import FastAPI
-import firebase_admin
-from firebase_admin import db
-from firebase_admin import storage
-from transformers import pipeline
-
-
-# from pydantic import BaseModel
+from fastapi import FastAPI, Request, Depends
+import io
+import base64
+from PIL import Image
+import numpy as np
+# from transformers import pipeline, TFGPT2Tokenizer, TFGPT2Model, GPT2Config, AutoTokenizer
 import json
-databaseURL = "https://divyanga-default-rtdb.firebaseio.com"
-bucketName = "divyanga.appspot.com"
+import tensorflow as tf
+from pydantic import BaseModel
+from utilfunctions import get_img_label, predict_reversal, convert_pdf_to_text, spell_check
+
+
+
+# databaseURL = "https://divyanga-default-rtdb.firebaseio.com"
+# bucketName = "divyanga.appspot.com"
 
 
 app = FastAPI()
 
-cred_obj = firebase_admin.credentials.Certificate('divyanga-firebase.json')
-default_app = firebase_admin.initialize_app(cred_obj, {
-    'databaseURL':databaseURL,
-    'storageBucket':bucketName})
+# cred_obj = firebase_admin.credentials.Certificate('divyanga-firebase.json')
+# default_app = firebase_admin.initialize_app(cred_obj, {
+#     'databaseURL':databaseURL,
+#     'storageBucket':bucketName})
 
 
-bucket_ref = storage.bucket()
-db_ref = db.reference('/')
+# bucket_ref = storage.bucket()
+# db_ref = db.reference('/')
 
-unmasker = pipeline('fill-mask', model='distilbert-base-uncased')
-pipe = pipeline("text-classification", model="textattack/distilbert-base-uncased-CoLA", from_pt=True)
-
-class User():
-    def __init__(self, age, std, ndd, loginid, email, pw) -> None:
-        self.age = age
-        self.standard = std
-        self.ndd = ndd
-        self.loginid = loginid
-        self.email = email
-        self.password = pw
-    age : str
-    standard : str
-    ndd : str
-    loginid : str
-    email : str
-    password : str
+# unmasker = pipeline('fill-mask', model='distilbert-base-uncased')
+# # pipe = pipeline("text-classification", model="textattack/distilbert-base-uncased-CoLA", from_pt=True)
+async def parse_body(request : Request):
+    data : bytearray = await request.body()
+    return data
 
 
+class Item(BaseModel):
+    image: str
 
-@app.get("/")
-def read_root():
+
+@app.post("/getImgLabel")
+async def get_imglabel():
+    res = get_img_label()
+    return {
+        'result' : res
+    }
+
+
+@app.post("/reversal")
+async def get_img_reversal_label(imgpath : str):
+    res = predict_reversal(imgpath)
+    return {
+        'result' : res
+    }
+
+@app.post("/upload-pdf")
+async def pdf_totext(path, folder):
+    convert_pdf_to_text(pdf_path=path, ocr_folder=folder)
+
+@app.post("/spellcheck")
+async def get_features(s1 : str):
+    res = spell_check(s1)
+    return {
+        'result' : res
+    }
+
+@app.post("/showinputdata")
+async def parse_input(data : bytes = Depends(parse_body)):
     try:
-        data = db_ref.get()
-        return data
-    except:
-        return {
-            'msg' : 'error'
-        }
+        print(data)
+        print(type(data))
+    except Exception as e:
+        print("error", e)
     finally:
-        print("GET / called")
+        print("request received")
 
 
-@app.put("/test")
-def set_data(objdata : dict):
-    try:
-        # db_ref.child('obj2').set(
-        #     json.dumps(objdata)[2:-2]
-        # )
-        # return json.dumps(objdata, separators=[",", ":"])
-        return pipe("This is a leopard")
-    except:
-        print("an error occured")
-    finally:
-        print("PUT /test called") 
+# @app.get("/testroute")
+# def push_data():
+#     try:
+#         db_ref.child('user').set({
+#             'loginid' : 2,
+#             'username' : 'testuser'
+#         })
+#         return {
+#             'msg' : 'success'
+#         }
+#     except Exception as e:
+#         return {
+#             'msg' : 'an error occurred',
+#             'error' : e
+#         }
+#     finally:
+#         print("GET /testroute called")
 
-@app.get("/testroute")
-def push_data():
-    try:
-        db_ref.child('user').set({
-            'loginid' : 2,
-            'username' : 'testuser'
-        })
-        return {
-            'msg' : 'success'
-        }
-    except:
-        return {
-            'msg' : 'error'
-        }
-    finally:
-        print("GET /testroute called")
 
-@app.get("/test/mlm-model")
-def get_res():
-    try:
-        sentence = "The is one of the most ferocious animals."
-        temp = sentence.split()
-        bestanswers = []
-        # return unmasker("The [MASK] is one of the most ferocious animals.")
-        for pos in range(len(temp) - 1):
-            ans = []
-            res = temp[:pos] + ["[MASK]"] + temp[pos:]
-            res = ' '.join(res)
-            results = unmasker(str(res))
-            for result in results:
-                ans.append(result)
-            maxscore = 0
-            for a in ans:
-                if a['score'] > maxscore:
-                    bestanswers.append(a)
-                    maxscore = a['score']
-        # maxscore = 0
-        # for bestans in bestanswers:
-        #     if pipe(bestans['sequence'])['label1']
-        return bestanswers
-    except:
-        return {
-            'msg' : 'error'
-        }
+# @app.put("/get-correct-sentence")
+# def get_res():
+#     try:
+#         sentence = "The is one of the most ferocious animals."
+#         temp = sentence.split()
+#         bestanswers = []
+#         # return unmasker("The [MASK] is one of the most ferocious animals.")
+#         for pos in range(len(temp) - 1):
+#             ans = []
+#             res = temp[:pos] + ["[MASK]"] + temp[pos:]
+#             res = ' '.join(res)
+#             results = unmasker(str(res))
+#             for result in results:
+#                 ans.append(result)
+#             maxscore = 0
+#             for a in ans:
+#                 if a['score'] > maxscore:
+#                     bestanswers.append(a['sequence'])
+#                     maxscore = a['score']
+#         for b in bestanswers:
+#             inputs = tokenizer(b, return_tensors="tf", padding=True, truncation=True)
+#             output = model(inputs)
+#             predicted = tf.argmax(output.logits, axis=1).numpy()
+#             if predicted.item() == 1:
+#                 return {b}
+#             else:
+#                 print("logged")
+#         return {
+#             'msg' : 'no correct sentence found'
+#         }
+#         # return bestanswers
+#     except Exception as e:
+#         return e
     
+@app.post("/upload_image")
+async def upload_image(item: Item):
+    # Read the JSON body of the request
+    # data = await request.json()
+    
+    # Extract the base64 image data
+    base64_image = item.image
+    
+    # Decode base64 image string
+    image_bytes = base64.b64decode(base64_image)
+    
+    # Create PIL Image object from bytes
+    img = Image.open(io.BytesIO(image_bytes))
+    rgb_image = img.convert('RGB')
+    
+    # Save the image as JPEG
+    img_path = "uploaded_image.jpg"
+    rgb_image.save(img_path, format='JPEG')
+    
+    return {"message": "Image uploaded and saved successfully", "image_path":img_path}
