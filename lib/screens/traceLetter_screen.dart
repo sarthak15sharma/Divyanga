@@ -126,7 +126,7 @@ class _TraceLetterScreenState extends State<TraceLetterScreen> {
                 onPressed: (){
                   setState(() {
                     if(correct)count++;
-                    Navigator.pop(context);
+                    Navigator.pop(context
                     notifier.clear();
                     correct = false;
                   });
